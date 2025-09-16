@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Add "Start Recall" button on the Lot/Serial form -->
+    <record id="view_stock_lot_form_inherit_pv_recall" model="ir.ui.view">
+        <field name="name">stock.lot.form.pv.recall</field>
+        <field name="model">stock.lot</field>
+        <!-- Base form view for lots/serials -->
+        <field name="inherit_id" ref="stock.view_production_lot_form"/>
+        <field name="arch" type="xml">
+            <!-- Insert a regular form button into the first group under <sheet>.
+                 This is robust when the parent form has no <header> or button_box. -->
+            <xpath expr="//sheet//group[1]" position="inside">
+                <button name="action_start_recall"
+                        type="object"
+                        string="Start Recall"
+                        class="oe_highlight"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

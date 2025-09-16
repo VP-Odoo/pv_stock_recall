@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Company-agnostic internal quarantine location.
+         We don't set company_id so it can be used across companies if needed. -->
+    <record id="stock_location_recall_quarantine" model="stock.location">
+        <field name="name">Recall Quarantine</field>
+        <field name="usage">internal</field>
+        <field name="location_id" ref="stock.stock_location_locations"/>
+        <field name="active">True</field>
+        <!-- Keep this NOT a scrap location; scraps are separate documents -->
+        <field name="scrap_location">False</field>
+    </record>
+</odoo>

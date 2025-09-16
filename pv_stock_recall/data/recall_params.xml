@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="param_recall_block_wip_mos" model="ir.config_parameter">
+        <field name="key">pv_stock_recall.block_wip_mos</field>
+        <field name="value">False</field>
+    </record>
+    <record id="param_recall_include_downstream" model="ir.config_parameter">
+        <field name="key">pv_stock_recall.include_downstream</field>
+        <field name="value">False</field>
+    </record>
+    <record id="param_recall_create_quality_alerts" model="ir.config_parameter">
+        <field name="key">pv_stock_recall.create_quality_alerts</field>
+        <field name="value">False</field>
+    </record>
+
+    <!-- NEW: Manager override enabled (default True) -->
+    <record id="param_recall_manager_override_enabled" model="ir.config_parameter">
+        <field name="key">pv_stock_recall.manager_override_enabled</field>
+        <field name="value">True</field>
+    </record>
+
+</odoo>

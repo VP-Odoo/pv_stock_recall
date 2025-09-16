@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================= Action & Menu ================ -->
+    <record id="action_recall_recall" model="ir.actions.act_window">
+        <field name="name">Recalls</field>
+        <field name="res_model">recall.recall</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">
+                Create a recall to orchestrate customer returns and scrapping.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_recall_root" name="Recalls"
+              parent="stock.menu_stock_warehouse_mgmt" sequence="90"
+              action="action_recall_recall"/>
+
+    <!-- ================= List ================= -->
+    <record id="view_recall_list" model="ir.ui.view">
+        <field name="name">recall.recall.list</field>
+        <field name="model">recall.recall</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="state"/>
+                <field name="company_id"/>
+                <field name="severity"/>
+                <field name="product_id"/>
+                <field name="impact_summary"/>
+                <field name="kpi_scrap_qty" string="Total Scrapped Qty"/>
+                <field name="kpi_return_qty" string="Total Returned Qty"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ================= Kanban ================= -->
+    <record id="view_recall_kanban" model="ir.ui.view">
+        <field name="name">recall.recall.kanban</field>
+        <field name="model">recall.recall</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_global_click oe_kanban_card">
+                            <div class="o_kanban_record_top">
+                                <strong><t t-esc="record.name.value"/></strong>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <div>Product: <t t-esc="record.product_id.value"/></div>
+                                <div>Lots: <t t-esc="record.lot_ids.raw_value and record.lot_ids.value"/></div>
+                                <div>
+                                    <span><strong><t t-esc="record.kpi_scrap_qty.raw_value"/></strong> scrapped</span>
+                                    <span> | </span>
+                                    <span><strong><t t-esc="record.kpi_return_qty.raw_value"/></strong> returned</span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ================= Recall Form ================= -->
+    <record id="view_recall_form" model="ir.ui.view">
+        <field name="name">recall.recall.form</field>
+        <field name="model">recall.recall</field>
+        <field name="arch" type="xml">
+            <form string="Recall">
+                <header>
+                    <!-- NEW: put Discover Endpoints back (visible in draft/in_progress) -->
+                    <button name="action_discover_endpoints" type="object" string="Discover Endpoints"
+                            class="btn-secondary" invisible="state not in ('draft','in_progress')"/>
+
+                    <button name="action_generate_actions" type="object" string="Generate Actions"/>
+                    <button name="action_close" type="object" string="Close"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,closed,cancel"/>
+                </header>
+                <sheet>
+                    <!-- Smart buttons -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_scraps" type="object" class="oe_stat_button" icon="fa-trash">
+                            <field name="smart_scrap_count" string="Scraps" widget="statinfo"/>
+                        </button>
+                        <button name="action_open_returns" type="object" class="oe_stat_button" icon="fa-undo">
+                            <field name="smart_return_count" string="Return Pickings" widget="statinfo"/>
+                        </button>
+                    </div>
+
+                    <field name="can_generate" invisible="1"/>
+
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="severity"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="product_id"/>
+                            <field name="lot_ids" widget="many2many_tags"/>
+                            <field name="deadline"/>
+                        </group>
+                    </group>
+
+                    <!-- KPI row -->
+                    <group>
+                        <group>
+                            <field name="kpi_scrap_qty" string="Total Scrapped Qty" readonly="1"/>
+                        </group>
+                        <group/>
+                    </group>
+
+                    <group>
+                        <field name="reason" colspan="4"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Endpoints">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="endpoint_type"/>
+                                    <field name="proposed_action"/>
+                                    <field name="state"/>
+                                    <field name="product_id"/>
+                                    <field name="lot_id"/>
+                                    <field name="quantity" string="Qty (Original)"/>
+                                    <field name="qty_left" string="Qty Left"/>
+                                    <field name="location_id"/>
+                                    <field name="partner_id"/>
+                                    <field name="picking_id"/>
+                                    <field name="production_refs" string="MO(s)" readonly="1"/>
+                                    <field name="scrap_id"/>
+                                    <field name="return_picking_id"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ================= Lot/Serial: "Recalls" smart button ================= -->
+    <record id="view_stock_lot_form_inherit_recall_button" model="ir.ui.view">
+        <field name="name">stock.lot.form.inherit.recall.button</field>
+        <field name="model">stock.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_recalls"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-bullhorn"
+                        help="Show recalls that include this lot/serial">
+                    <field name="recall_count" string="Recalls" widget="statinfo"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ================= Phase 2 UI: MO banner + smart button ================= -->
+    <record id="view_mrp_production_form_inherit_recall" model="ir.ui.view">
+        <field name="name">mrp.production.form.inherit.recall</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="arch" type="xml">
+
+            <!-- keep compute fields on the form for modifier evaluation -->
+            <xpath expr="//sheet" position="inside">
+                <field name="recall_blocked" invisible="1"/>
+                <field name="recall_acknowledged" invisible="1"/>
+                <field name="recall_count" invisible="1"/>
+                <field name="recall_ids" invisible="1"/>
+            </xpath>
+
+            <!-- smart button in standard button box -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_recalls" type="object" class="oe_stat_button" icon="fa-bullhorn"
+                        invisible="recall_count == 0">
+                    <field name="recall_count" string="Recalls" widget="statinfo"/>
+                </button>
+            </xpath>
+
+            <!-- red banner placed immediately below stat buttons (high-visibility) -->
+            <xpath expr="//div[@name='button_box']" position="after">
+                <div class="alert alert-danger o_mt16"
+                     invisible="(not recall_blocked) or (state in ('done','cancel'))">
+                    <strong>Recall impact:</strong>
+                    This MO is affected by active recall(s). You cannot complete it unless acknowledged.
+                    <button type="object" name="action_open_recalls" class="btn btn-link p-0 ms-2">Open Recalls</button>
+                    <button type="object" name="action_acknowledge_recall" class="btn btn-link p-0 ms-2">Acknowledge</button>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ================= Picking UI: banner + smart button (unchanged) ================= -->
+    <record id="view_stock_picking_form_inherit_recall_ack" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit.recall.ack</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <!-- keep compute fields on the form for modifier evaluation -->
+            <xpath expr="//sheet" position="inside">
+                <field name="recall_blocked" invisible="1"/>
+                <field name="recall_acknowledged" invisible="1"/>
+                <field name="recall_count" invisible="1"/>
+                <field name="recall_ids" invisible="1"/>
+            </xpath>
+
+            <!-- smart button in standard button box -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_recalls" type="object" class="oe_stat_button" icon="fa-bullhorn"
+                        invisible="recall_count == 0">
+                    <field name="recall_count" string="Recalls" widget="statinfo"/>
+                </button>
+            </xpath>
+
+            <!-- red banner placed immediately below stat buttons -->
+            <xpath expr="//div[@name='button_box']" position="after">
+                <div class="alert alert-danger o_mt16"
+                     invisible="(not recall_blocked) or (state in ('done','cancel'))">
+                    <strong>Recall impact:</strong>
+                    This transfer is affected by active recall(s). You cannot validate it unless acknowledged.
+                    <button type="object" name="action_open_recalls" class="btn btn-link p-0 ms-2">Open Recalls</button>
+                    <button type="object" name="action_acknowledge_recall" class="btn btn-link p-0 ms-2"
+                            groups="pv_stock_recall.group_recall_manager">Acknowledge</button>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Users in this group may bypass recall shipping blocks -->
+    <record id="group_recall_manager" model="res.groups">
+        <field name="name">Recall Manager (Override)</field>
+        <field name="category_id" ref="base.module_category_inventory"/>
+        <field name="comment">Can override shipping/internal blocks caused by active recalls.</field>
+    </record>
+</odoo>

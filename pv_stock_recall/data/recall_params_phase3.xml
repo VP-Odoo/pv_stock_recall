@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="param_recall_block_reservations" model="ir.config_parameter">
+        <field name="key">pv_stock_recall.block_reservations</field>
+        <field name="value">True</field>
+    </record>
+    <record id="param_recall_use_quarantine" model="ir.config_parameter">
+        <field name="key">pv_stock_recall.use_quarantine</field>
+        <field name="value">False</field>
+    </record>
+</odoo>
